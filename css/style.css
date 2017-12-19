@@ -1,0 +1,28 @@
+@font-face {
+    font-family: 'Montserrat';
+    src: url('../fonts/Montserrat/Montserrat-Bold.ttf');
+}
+
+@font-face {
+    font-family: 'Roboto Mono';
+    src: url('../fonts/Roboto Mono/RobotoMono-Bold.ttf');
+}
+
+@media print {
+    form {
+        display: none;
+    }
+    .jumbotron {
+        display: none;
+    }
+    .donate {
+        display: none;
+    }
+}
+
+#wallet {
+    width: 1200px;
+    height: 400px;
+    margin:  40px auto 40px auto;
+    display: block;
+}

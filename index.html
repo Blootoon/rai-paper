@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title>RaiPaper - Simple paper wallet generator for RaiBlocks.</title>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css" integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+        <link rel="stylesheet" href="css/style.css" />
+    </head>
+
+    <body>
+        <div class="container">
+            <div class="jumbotron">
+                <h1 class="display-3">RaiPaper</h1>
+                <p class="lead">This is a simple paper wallet for RaiBlocks.</p>
+                <hr class="my-4">
+                <ol>
+                    <li>Download zip file of this web page from GitHub (optional)</li>
+                    <li>Turn off your internet connection (optional)</li>
+                    <li>Extract zip and run index.html in your browser's anonymous window (optional)</li>
+                    <li>Consider using safe OS like Ubuntu booted from CD (optional)</li>
+                    <li>Copy account address and seed from your RaiWallet and paste it in form bellow, currently it doesn't do much validations so be careful you got everything right</li>
+                    <li>Click generate and if you are happy with the result click Print, sometimes images or text doesn't load correctly on first try</li>
+                </ol>
+
+            </div>
+            <div class="row">
+                <div class="col">
+                    <form id="generator">
+                        <div class="form-group">
+                            <label for="account">Account:</label>
+                            <input type="text" id="account" name="account" maxlength="64" class="form-control" />
+                            <div id="account-error" class="form-control-feedback" style="display: none;">This doesn't look like a RaiBlocks account.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="seed">Seed:</label>
+                            <input type="text" id="seed" name="seed" maxlength="64" class="form-control" />
+                            <div id="seed-error" class="form-control-feedback" style="display: none;">This doesn't look like a RaiBlocks seed.</div>
+                        </div>
+                        <div class="form-group">
+                            <label for="theme">Theme:</label>
+                            <select id="theme" name="theme" class="form-control">
+                                <option value="hexagons" selected="selected">Hexagons</option>
+                                <option value="christmas">Christmas</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Generate</button>
+                        <button type="button" class="btn btn-success" onclick="window.print();">Print</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="container-fluid">
+            <div class="row" style="font-family: 'Roboto Mono';">
+                <div class="col" style="font-family: Montserrat;">
+                    <canvas id="wallet">
+                        Your browser does not support canvas. Please try again with a different browser.
+                    </canvas>
+                </div>
+            </div>
+        </div>
+
+        <script src="https://code.jquery.com/jquery-3.1.1.slim.min.js" integrity="sha384-A7FZj7v+d/sdmMqp/nOQwliLvUsJfDHW+k9Omg/a/EheAdgtzNs3hpfag6Ed950n" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+        <script src="js/qrious.min.js"></script>
+        <script>
+            $(document).ready(function () {
+                $('#generator').on('submit', function (e) {
+                    e.preventDefault();
+
+                    var account = $('#account').val();
+                    var seed = $('#seed').val();
+                    var theme = $('#theme').val();
+
+                    if (validateInput(account, seed)) {
+                        generate(account, seed, theme);
+                    }
+                });
+            });
+
+            themes = {
+                'hexagons': {
+                    'background': 'img/hexagons.png',
+                    'ribbonTop': [0, '#2C839A', 1.0, '#6CCEF5'],
+                    'ribbonBottom': [0, '#49B749', 1.0, '#1993D2'],
+                    'ribbonLeft': [0, '#2C839A', 0.33, '#40B299', 0.66, '#BBD631', 1.0, '#49B749'],
+                    'ribbonRight': [0, '#6CCEF5', 0.33, '#1FB0E6', 0.66, '#1993D2', 1.0, '#1993D2']
+                },
+                'christmas': {
+                    'background': 'img/christmas.png',
+                    'ribbonTop': [0, 'red', 0.2, 'green', 0.4, 'red', 0.6, 'green', 0.8, 'red', 1.0, 'green'],
+                    'ribbonBottom': [0, 'green', 0.2, 'red', 0.4, 'green', 0.6, 'red', 0.8, 'green', 1.0, 'red'],
+                    'ribbonLeft': [0, 'red', 0.33, 'green', 0.66, 'red', 1.0, 'green'],
+                    'ribbonRight': [0, 'green', 0.33, 'red', 0.66, 'green', 1.0, 'red']
+                }
+            };
+
+            function generate(account, seed, theme) {
+                var wallet = document.getElementById('wallet');
+                wallet.width = 1200;
+                wallet.height = 400;
+
+                var background = new Image();
+                background.src = themes[theme].background;
+
+                var logo = new Image();
+                logo.src = 'img/logo-mini.png';
+
+                if (wallet.getContext) {
+                    var walletContext = wallet.getContext('2d');
+
+                    background.onload = function() {
+                        walletContext.globalAlpha = 0.25;
+                        walletContext.drawImage(background, 0, 0, background.width, background.height, 0, 0, background.width, background.height);
+                        walletContext.globalAlpha = 1.0;
+                        writeText(walletContext, 'RAIBLOCKS', '60px Montserrat', 'rgb(44, 62, 80)', 'center', wallet.width / 2, wallet.height / 2 + 150)
+
+                        var qrSize = 200;
+                        var topOffset = (wallet.height - qrSize) / 2;
+                        var bottomOffset = topOffset + qrSize;
+                        var leftOffset = wallet.height / 2;
+                        var rightOffset = wallet.width - leftOffset;
+                        var offset = 25;
+
+                        var accountImage = generateQR(account, qrSize);
+                        accountImage.onload = function () {
+                            writeText(walletContext, 'RECEIVING ADDRESS', '24px Montserrat', 'rgb(44, 62, 80)', 'center', leftOffset, topOffset - offset);
+                            walletContext.drawImage(accountImage, 0, 0, qrSize, qrSize, (wallet.height - qrSize) / 2, (wallet.height - qrSize) / 2, qrSize, qrSize);
+                            writeText(walletContext, account.substr(0, 32), '14px Roboto Mono', 'rgb(0, 0, 0)', 'center', leftOffset, bottomOffset + offset);
+                            writeText(walletContext, account.substr(32, 32), '14px Roboto Mono', 'rgb(0, 0, 0)', 'center', leftOffset, bottomOffset + offset * 1.75);
+                        };
+
+                        var seedImage = generateQR(seed, qrSize);
+                        seedImage.onload = function () {
+                            writeText(walletContext, 'PRIVATE SEED', '24px Montserrat', 'rgb(44, 62, 80)', 'center', rightOffset, topOffset - offset);
+                            walletContext.drawImage(seedImage, 0, 0, qrSize, qrSize, wallet.width - qrSize - (wallet.height - qrSize) / 2, (wallet.height - qrSize) / 2, qrSize, qrSize);
+                            writeText(walletContext, seed.substr(0, 32), '14px Roboto Mono', 'rgb(0, 0, 0)', 'center', rightOffset, bottomOffset + offset);
+                            writeText(walletContext, seed.substr(32, 32), '14px Roboto Mono', 'rgb(0, 0, 0)', 'center', rightOffset, bottomOffset + offset * 1.75);
+                        };
+
+                        logo.onload = function() {
+                            walletContext.drawImage(logo, 0, 0, logo.width, logo.height, (wallet.width - logo.width) / 2, (wallet.height - logo.height) / 2 - 40, logo.width, logo.height);
+                        };
+
+                        drawRibbon(walletContext, 0, 0, wallet.width, 0, themes[theme].ribbonTop);
+                        drawRibbon(walletContext, 0, wallet.height, wallet.width, wallet.height, themes[theme].ribbonBottom);
+                        drawRibbon(walletContext, 0, 0, 0, wallet.height, themes[theme].ribbonLeft);
+                        drawRibbon(walletContext, wallet.width, 0, wallet.width, wallet.height, themes[theme].ribbonRight);
+                    };
+                }
+            }
+
+            function generateQR(text, size) {
+                var qr = new QRious();
+                qr.set({
+                    background: 'rgb(255, 255, 255)',
+                    backgroundAlpha: 1.0,
+                    foreground: 'rgb(44, 62, 80)',
+                    foregroundAlpha: 1.0,
+                    level: 'L',
+                    size: size,
+                    value: text
+                });
+
+                var image = new Image();
+                image.src = qr.toDataURL();
+
+                return image;
+            }
+
+            function writeText(ctx, text, font, color, textAlign, x, y) {
+                ctx.font = font;
+                ctx.textAlign = textAlign;
+                ctx.fillStyle = color;
+                ctx.fillText(text, x, y);
+            }
+
+            function drawRibbon(ctx, x1, y1, x2, y2, colorStops) {
+                ctx.lineWidth = 15;
+
+                var grad = ctx.createLinearGradient(x1, y1, x2, y2);
+                for (var i = 0; i < colorStops.length; i+=2) {
+                    grad.addColorStop(colorStops[i], colorStops[i + 1]);
+                }
+
+                ctx.strokeStyle = grad;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+
+                ctx.stroke();
+            }
+
+            function validateInput(account, seed) {
+                var resultAccount = true;
+                var resultSeed = true;
+
+                if (account.length !== 64 || account.indexOf('xrb_') !== 0) {
+                    $('#account').parent().addClass('has-danger');
+                    $('#account-error').show();
+                    resultAccount = false;
+                } else {
+                    $('#account').parent().removeClass('has-danger');
+                    $('#account-error').hide();
+                }
+
+                if (seed.length !== 64 /*|| seed.match(/[0-9A-F]{64}/g*)*/) {
+                    $('#seed').parent().addClass('has-danger');
+                    $('#seed-error').show();
+                    resultSeed =  false;
+                } else {
+                    $('#seed').parent().removeClass('has-danger');
+                    $('#seed-error').hide();
+                }
+
+                if (resultAccount && resultSeed) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        </script>
+    </body>
+</html> 
