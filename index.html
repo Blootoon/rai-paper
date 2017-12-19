@@ -9,21 +9,29 @@
     </head>
 
     <body>
-        <div class="container">
-            <div class="jumbotron">
-                <h1 class="display-3">RaiPaper</h1>
-                <p class="lead">This is a simple paper wallet for RaiBlocks.</p>
-                <hr class="my-4">
-                <ol>
-                    <li>Download zip file of this web page from GitHub (optional)</li>
-                    <li>Turn off your internet connection (optional)</li>
-                    <li>Extract zip and run index.html in your browser's anonymous window (optional)</li>
-                    <li>Consider using safe OS like Ubuntu booted from CD (optional)</li>
-                    <li>Copy your seed from your RaiWallet and paste it in form bellow, currently it doesn't do much validations so be careful you got everything right</li>
-                    <li>Click generate and if you are happy with the result click Print, sometimes images or text doesn't load correctly on first try</li>
-                </ol>
-
+        <div class="jumbotron header">
+            <div class="container">
+                <div class="row">
+                    <div class="col">
+                        <h1 class="display-3">RAIPAPER</h1>
+                        <p class="lead">A simple paper wallet for RaiBlocks.</p>
+                        <hr class="my-4">
+                        <ol>
+                            <li>Download <a href="https://github.com/Blootoon/rai-paper/archive/master.zip">zip</a> file of this web page from GitHub (optional)</li>
+                            <li>Turn off your internet connection (optional)</li>
+                            <li>Extract zip and run index.html in your browser's anonymous window (optional)</li>
+                            <li>Consider using safe OS like Ubuntu booted from CD (optional)</li>
+                            <li>Copy your seed from your RaiWallet and paste it in form bellow, currently it doesn't do much validations so be careful you got everything right</li>
+                            <li>Click generate and if you are happy with the result click Print, sometimes images or text doesn't load correctly on first try</li>
+                        </ol>
+                        <a href="https://github.com/Blootoon/rai-paper" class="btn btn-primary btn-large" >Go to GitHub</a>
+                    </div>
+                </div>
             </div>
+        </div>
+
+
+        <div class="container">
             <div class="row">
                 <div class="col">
                     <form id="generator">
@@ -52,6 +60,17 @@
                     <canvas id="wallet">
                         Your browser does not support canvas. Please try again with a different browser.
                     </canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <div class="container">
+                <div class="row">
+                    <div class="col donate">
+                        Buy me a beer! <br />
+                        xrb_3q4391wum6uh97h7dtro8ujdsotex7zot8nj7b18qh8s7agr7ujbgtccmeq4
+                    </div>
                 </div>
             </div>
         </div>
@@ -121,7 +140,7 @@
                             walletContext.drawImage(logo, 0, 0, logo.width, logo.height, (wallet.height - logo.height) / 2, (wallet.height - logo.height) / 2, logo.width, logo.height);
                         };
 
-                        writeText(walletContext, 'RAIBLOCKS', '60px Montserrat', 'rgb(44, 62, 80)', 'center', wallet.width / 2, wallet.height / 2)
+                        writeText(walletContext, 'RAIBLOCKS', '72px Montserrat', 'rgb(44, 62, 80)', 'center', wallet.width / 2, wallet.height / 2)
 
                         var seedImage = generateQR(seed, qrSize);
                         seedImage.onload = function () {

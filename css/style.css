@@ -12,10 +12,10 @@
     form {
         display: none;
     }
-    .jumbotron {
+    .header {
         display: none;
     }
-    .donate {
+    .footer {
         display: none;
     }
 }
@@ -25,4 +25,22 @@
     height: 400px;
     margin:  40px auto 40px auto;
     display: block;
+}
+
+.header {
+    background-color: #2C3E50;
+    color: white;
+}
+
+.header h1 {
+    font-family: Montserrat;
+}
+
+.footer {
+    background-color: #2C839A;
+    color: white;
+}
+
+.footer .donate {
+    margin: 40px 0;
 }
